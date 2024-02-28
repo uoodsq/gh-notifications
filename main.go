@@ -286,6 +286,31 @@ func (s Store) Open(n Notification) error {
 	return err
 }
 
+func pageNotifications() ([]Notification, error) {
+	var notifications []Notification
+	page := 0
+
+	for {
+		var n []Notification
+
+		path := fmt.Sprintf("notifications?page=%d", page)
+
+		if err := client.Get(path, &n); err != nil {
+			return nil, err
+		}
+
+		if len(n) == 0 {
+			break
+		}
+
+		notifications = append(notifications, n...)
+
+		page += 1
+	}
+
+	return notifications, nil
+}
+
 func syncAction(c *cli.Context) error {
 	store, err := LoadStore()
 
@@ -293,9 +318,9 @@ func syncAction(c *cli.Context) error {
 		return err
 	}
 
-	var notifications []Notification
+	notifications, err := pageNotifications()
 
-	if err := client.Get("notifications", &notifications); err != nil {
+	if err != nil {
 		return err
 	}
 
